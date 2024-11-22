@@ -2,7 +2,6 @@ import requests
 from threading import Lock
 import logging
 
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -20,7 +19,7 @@ class NetworkManager:
     def __init__(self):
         if not hasattr(self, "_initialized"):  # 인스턴스가 이미 초기화되었는지 확인
             self._initialized = True
-            # self.base_url = "https://requests-homework.onrender.com"
+            # self.base_url = "https://requests-homework.onrender.com" # 더 이상 사용 안함
             self.base_url = "http://192.168.10.13:8888"
             self.headers = {
                 "accept": "application/json",
@@ -29,22 +28,36 @@ class NetworkManager:
             logging.basicConfig(level=logging.INFO)
 
     # GET 메서드
-    def get(self, endpoint, params=None, json=None):
-        return self.__request("GET", endpoint, params=params, json=json)
+    def get(self, endpoint, params=None, json=None, is_team=False):
+        return self.__request("GET", endpoint, params=params, json=json, is_team=is_team)
 
     # POST 메서드
-    def post(self, endpoint, params=None, json=None):
-        return self.__request("POST", endpoint, params=params, json=json)
+    def post(self, endpoint, params=None, json=None, files=None, is_team=False):
+        return self.__request("POST", endpoint, params=params, json=json, files=files, is_team=is_team)
 
     """새로운 HTTP 메서드 사용시 추가"""
 
-    def __request(self, method, endpoint, **kwargs):
-        url = f"{self.base_url}/{endpoint}"
-
+    def __request(self, method, endpoint, is_team, params, files=None, **kwargs):
+        # HTTP 요청 보내기
+        print(f"{endpoint}, is: {is_team}, {params}, file: {files}")
         try:
-            # HTTP 요청 보내기
-            logger.info(f"Sending {method} request to {url} with params {kwargs}")
-            response = requests.request(method, url, headers=self.headers, **kwargs)
+            if is_team:
+                url = f"http://192.168.10.13:8884/{endpoint}"
+                logger.info(f"Sending {method} request to {url} with params {kwargs}")
+                response = requests.request(
+                    method=method,
+                    url=url,
+                    params=params,
+                    files=files)
+
+            else:
+                url = f"{self.base_url}/{endpoint}"
+                logger.info(f"Sending {method} request to {url} with params {kwargs}")
+                response = requests.request(
+                    method=method,
+                    url=url,
+                    headers=self.headers
+                    , **kwargs)
 
             # 상태 코드 확인
             response.raise_for_status()
