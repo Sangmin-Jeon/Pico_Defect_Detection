@@ -12,3 +12,7 @@ class ApiService:
 
     """새로운 API 사용시 추가"""
 
+    # 192.169.10.13 서버 open
+    def post_start_server(self, team, model_id):
+        return self.networkManager.post("start-server", json=(team, model_id))
+

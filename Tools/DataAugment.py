@@ -13,20 +13,20 @@ def augment_images(directory_path, save_directory=None, augmentations=None):
         '''
         augmentations = transforms.Compose([
             # 이미지를 수평 방향으로 뒤집습니다. 뒤집힐 확률은 50%입니다.
-            transforms.RandomHorizontalFlip(p=0.5),
+            #transforms.RandomHorizontalFlip(p=0.5),
             # 이미지를 수직 방향으로 뒤집습니다. 뒤집힐 확률은 50%입니다.
-            transforms.RandomVerticalFlip(p=0.5),
+            #transforms.RandomVerticalFlip(p=0.5),
             # 이미지의 색상을 무작위로 변경합니다.
             # - brightness: 밝기를 ±50% 범위에서 조정합니다.
             # - contrast: 대비를 ±50% 범위에서 조정합니다.
             # - saturation: 채도를 ±50% 범위에서 조정합니다.
             # - hue: 색조를 ±10% 범위에서 조정합니다.
-            transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.1),
+            transforms.ColorJitter(brightness=(1, 1.5), contrast=0, saturation=0, hue=0),
             # 이미지를 -30도에서 +30도 사이에서 무작위로 회전합니다.
-            transforms.RandomRotation(degrees=30),
+            #transforms.RandomRotation(degrees=30),
             # 이 값은 현재 사용하는 이미지의 표준 크기와 일치하며, 변경할 수 있습니다.
             # 원래 사용하던 크기가 640, 480 사이즈에요.
-            transforms.Resize((640, 480))
+            # transforms.Resize((640, 480))
         ])
 
     image_files = [file for file in os.listdir(directory_path) if file.lower().endswith(('.jpg'))]
