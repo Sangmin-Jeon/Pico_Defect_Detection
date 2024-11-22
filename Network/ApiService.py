@@ -17,11 +17,9 @@ class ApiService:
         params = { "model_id": model_id }
         return self.networkManager.post("start-server/" + team, params=params, is_team=False)
 
-    def post_inference(self, min_confidence, base_model, file_path):
+    def post_inference(self, min_confidence, base_model, file):
         params = {
             "min_confidence": min_confidence,
             "base_model": base_model
         }
-        with open(file_path, 'rb') as image_file:
-            files = {'file': ('b4_img_266.jpg', image_file, 'image/jpeg')}
-            return self.networkManager.post("inference/run", params=params, files=files, is_team=True)
+        return self.networkManager.post("inference/run", params=params, files=file, is_team=True)

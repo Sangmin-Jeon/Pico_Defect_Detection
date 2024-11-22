@@ -3,6 +3,7 @@ from Network.ApiService import ApiService
 # from Tools.Gradio import start_gradio
 # from Tools.CheckImage import show_imaged
 import time
+import Inference_Pico
 
 # 여기에 모델 API URL 을 넣으면 됩니다.
 VISION_API_URL = "https://suite-endpoint-api-apne2.superb-ai.com/endpoints/9a987f3f-174c-4678-acb2-60be9ea6a0ee/inference"
@@ -29,9 +30,13 @@ store_directory_path = "/Users/jeonsangmin/Desktop/v2/증강데이터"
 
 apiManager = ApiService()
 # _ = apiManager.post_submit(name="stu", student_number="stu_num")
-_ = apiManager.post_start_server(team='team4', model_id='2cbabb7e-5f5c-47c3-ab03-3b7c9ad3fa5e')
-time.sleep(1)
-_ = apiManager.post_inference(0.3, "YOLOv6-M", '/home/rokey/Downloads/b4_img_266.jpg')
+if apiManager.post_start_server(team='team4', model_id='2cbabb7e-5f5c-47c3-ab03-3b7c9ad3fa5e'):
+    img_path = '/home/rokey/Downloads/b4_img_266.jpg'
+    with open(img_path, 'rb') as image_file:
+        file = {'file': ('b4_img_266.jpg', image_file, 'image/jpeg')}
+        inference_data = apiManager.post_inference(0.3, "YOLOv6-M", file=file)
+        Inference_Pico.show_imaged(img_path, inference_data)
+
 
 if __name__ == "__main__":
     pass

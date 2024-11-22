@@ -56,8 +56,8 @@ class NetworkManager:
                 response = requests.request(
                     method=method,
                     url=url,
-                    headers=self.headers
-                    , **kwargs)
+                    headers=self.headers,
+                    params=params)
 
             # 상태 코드 확인
             response.raise_for_status()
