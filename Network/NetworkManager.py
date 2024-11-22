@@ -19,7 +19,7 @@ class NetworkManager:
     def __init__(self):
         if not hasattr(self, "_initialized"):  # 인스턴스가 이미 초기화되었는지 확인
             self._initialized = True
-            # self.base_url = "https://requests-homework.onrender.com" # 더 이상 사용 안함
+            # self.base_url = "https://requests-homework.onrender.com"
             self.base_url = "http://192.168.10.13:8888"
             self.headers = {
                 "accept": "application/json",
@@ -56,8 +56,10 @@ class NetworkManager:
                 response = requests.request(
                     method=method,
                     url=url,
-                    headers=self.headers,
-                    params=params)
+                    headers=self.headers
+                    , **kwargs)
+
+            # response = requests.request(method, url, headers=self.headers, **kwargs)
 
             # 상태 코드 확인
             response.raise_for_status()

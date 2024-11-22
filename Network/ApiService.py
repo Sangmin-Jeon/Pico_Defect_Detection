@@ -14,12 +14,18 @@ class ApiService:
 
     # 192.169.10.13 서버 open
     def post_start_server(self, team, model_id):
-        params = { "model_id": model_id }
+        params = {
+            "model_id": model_id
+        }
         return self.networkManager.post("start-server/" + team, params=params, is_team=False)
 
-    def post_inference(self, min_confidence, base_model, file):
+    def post_inference(self, min_confidence, base_model, file_path):
         params = {
             "min_confidence": min_confidence,
             "base_model": base_model
         }
-        return self.networkManager.post("inference/run", params=params, files=file, is_team=True)
+        import requests
+        # Open the image file and send it
+        with open(file_path, 'rb') as image_file:
+            files = {'file': ('b4_img_266.jpg', image_file, 'image/jpeg')}
+            return self.networkManager.post("inference/run", params=params, files=files, is_team=True)

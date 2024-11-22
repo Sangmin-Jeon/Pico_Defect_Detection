@@ -28,16 +28,11 @@ store_directory_path = "/Users/jeonsangmin/Desktop/v2/증강데이터"
 # 1번에 directory_path에 추론할 이미지의 경로 넣으세요.
 # show_imaged("", VISION_API_URL, ACCESS_KEY)
 
-apiManager = ApiService()
-# _ = apiManager.post_submit(name="stu", student_number="stu_num")
-if apiManager.post_start_server(team='team4', model_id='2cbabb7e-5f5c-47c3-ab03-3b7c9ad3fa5e'):
-    img_path = '/home/rokey/Downloads/b4_img_266.jpg'
-    with open(img_path, 'rb') as image_file:
-        file = {'file': ('b4_img_266.jpg', image_file, 'image/jpeg')}
-        inference_data = apiManager.post_inference(0.3, "YOLOv6-M", file=file)
-        Inference_Pico.show_imaged(img_path, inference_data)
-
 
 if __name__ == "__main__":
-    pass
-
+    apiManager = ApiService()
+    # _ = apiManager.post_submit(name="stu", student_number="stu_num")
+    _ = apiManager.post_start_server(team='team4', model_id='2cbabb7e-5f5c-47c3-ab03-3b7c9ad3fa5e')
+    time.sleep(1)
+    img_inf = apiManager.post_inference(0.3, "YOLOv6-M", '/home/rokey/Downloads/b4_img_266.jpg')
+    Inference_Pico.show_imaged('/home/rokey/Downloads/b4_img_266.jpg', img_inf)
