@@ -12,12 +12,15 @@ def count_class(detection_data):
     return class_cnt
 
 
-def show_image(img_path, detection_data):
+def show_image(detection_data, img_path=None, img=None):
     # 이미지 로드
+    print(img_path)
     img = cv2.imread(img_path)
     if img is None:
         print("이미지를 불러올 수 없습니다. 경로를 확인하세요.")
         return
+    else:
+        print("show images")
 
     # 박스 색상과 선 두께 설정
     colors = {
