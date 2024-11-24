@@ -1,5 +1,6 @@
 from Network.ApiService import ApiService
 from requests.auth import HTTPBasicAuth
+import serial
 # from Tools.DataAugment import set_data_augment
 # from Tools.Gradio import start_gradio
 # from Tools.CheckImage import show_imaged
@@ -9,76 +10,34 @@ import requests
 import os
 import time
 import confusion_matrix
+import check_objects
+from io import BytesIO
+import cv2
 
-# 여기에 모델 API URL 을 넣으면 됩니다.
-# VISION_API_URL = "https://suite-endpoint-api-apne2.superb-ai.com/endpoints/9a987f3f-174c-4678-acb2-60be9ea6a0ee/inference"
-# TEAM = "kdt2024_1-9" # 이건 건들 필요 없어요.
-# ACCESS_KEY = "fFJOF6bXM75WTU3qTKADi2DfJRVpcJXk5vAdEep2" # 이건 본인 setting -> ACCESS KEY를 직접 넣어서 사용하세요.
-# directory_path = "/Users/jeonsangmin/Desktop/broken_img_"
-# store_directory_path = "/Users/jeonsangmin/Desktop/v2/증강데이터"
+ser = serial.Serial("/dev/ttyACM0", 9600)
 
-'''
-    여기에 필요한 기능을 주석 해제 하여 사용하세요 !!!
-'''
-
-''' 1. 데이터 증강 시 사용 (학습 데이터 만들때) '''
-# 1번 param에 데이터 증강 시킬 이미지의 경로 넣으세요.
-# 2번 param에 저장할 경로 넣으세요.
-# set_data_augment(directory_path, store_directory_path)
-
-''' 2. gradio 웹 사용 (이미지 직접 업로드)'''
-# start_gradio(VISION_API_URL, TEAM, ACCESS_KEY)
-
-''' 3. 추론 한 이미지 확인 (아직 작업 중)'''
-# 1번에 directory_path에 추론할 이미지의 경로 넣으세요.
-# show_imaged("", VISION_API_URL, ACCESS_KEY)
-
-
-# if __name__ == "__main__":
-#     apiManager = ApiService()
-#     # _ = apiManager.post_submit(name="stu", student_number="stu_num")
-#     _ = apiManager.post_start_server(team='team4', model_id='2cbabb7e-5f5c-47c3-ab03-3b7c9ad3fa5e')
-#     time.sleep(1)
-#     img_inf = apiManager.post_inference(0.3, "YOLOv6-M", '/home/rokey/Downloads/b4_img_266.jpg')
-#     Inference_Pico.show_imaged('/home/rokey/Downloads/b4_img_266.jpg', img_inf)
-
-
-
-def test_image_detection():
-    # API endpoint URL
-    url = "http://192.168.10.14:8884/inference/run"  # Adjust port if different
-
-    # Test image path - adjust this to your image location
-    image_path = "/home/rokey/Downloads/b4_img_266.jpg"
-
-    # Parameters
-    params = {
-        "min_confidence": 0.31,
-        "base_model": "YOLOv6-M"  # YOLOv6-N, YOLOv6-M, YOLOv6-L, YOLOv6-L6
-    }
-
-    # Prepare the file
-    with open(image_path, 'rb') as image_file:
-        files = {'file': ('image.jpg', image_file, 'image/jpeg')}
-
-        # Send POST request
-        response = requests.post(url, params=params, files=files)
-
-    # Check if request was successful
-    if response.status_code == 200:
-        print("Success!")
-        print("Detected objects:", response.json())
-        return response.json()
-    else:
-        print(f"Error: {response.status_code}")
-        print(response.text)
+def crop_img(img, size_dict):
+    x = size_dict["x"]
+    y = size_dict["y"]
+    w = size_dict["width"]
+    h = size_dict["height"]
+    img = img[y : y + h, x : x + w]
+    return img
 
 def use_cloud_server(img):
     URL = "https://suite-endpoint-api-apne2.superb-ai.com/endpoints/be320cd2-d2bd-4e17-bc9a-4398e26d1f23/inference"
     ACCESS_KEY = "fFJOF6bXM75WTU3qTKADi2DfJRVpcJXk5vAdEep2"
 
-    with open(img, "rb") as image_file:
-        image_data = image_file.read()
+    # with open(img, "rb") as image_file:
+    #     image_data = image_file.read()
+
+    _, img_encoded = cv2.imencode(".jpg", img)
+
+    # Prepare the image for sending
+    img_bytes = BytesIO(img_encoded.tobytes())
+
+    # Send the image to the API
+    image_data = {"file": ("image.jpg", img_bytes, "image/jpeg")}
 
     try:
         response = requests.post(
@@ -92,37 +51,87 @@ def use_cloud_server(img):
         print(f"Error uploading {img}: {e}")
 
 
-def test_start_server():
-    # API endpoint URL
-    url = "http://192.168.10.14:8888/start-server/team4"  # Adjust host/port and team name
-    # Parameters
-    params = {
-        "model_id": "2cbabb7e-5f5c-47c3-ab03-3b7c9ad3fa5e"  # Replace with actual model ID
-    }
+def get_img():
+    cam = cv2.VideoCapture(2)
 
-    # Send POST request
-    response = requests.post(url, params=params)
+    if not cam.isOpened():
+        print("Camera Error")
+        exit(-1)
 
-    # Check if request was successful
-    if response.status_code == 200:
-        print("Server started successfully!")
-        print("Response:", response.json())
-    else:
-        print(f"Error: {response.status_code}")
-        print(response.text)
+    ret, img = cam.read()
+    cam.release()
+
+    if not ret:
+        print("Failed to capture image")
+        exit(-1)
+
+    return img
+
+def check_pico():
+    # data = test_image_detection()
+    while True:
+        data = ser.read()
+        print(f"Data received from serial: {data}")
+
+        if data == b"0":
+            img = get_img()
+
+            # Crop information (set to None if no cropping is needed)
+            crop_info = {"x": 20, "y": 100, "width": 600, "height": 600}
+
+            if crop_info is not None:
+                img = crop_img(img, crop_info)
+
+            # test 이미지
+            # img = "/Users/jeonsangmin/Desktop/test_img_/test_img_82.jpg"
+
+            data = use_cloud_server(img)
+            Inference_Pico.show_image(img, data)
+            centers, objects_data, is_flag = confusion_matrix.process_images(data, "test_img_80.jpg")
+            print(centers, objects_data, is_flag)
+
+            if not is_flag:
+                print("9개 다 안잡힘")
+                return
+
+            is_fair_quality = check_objects.validate_positions(centers, objects_data)
+            print(f"품질 결과: {is_fair_quality}")
+
+            if not is_fair_quality:
+                print("불량 입니다.")
+
+            if is_fair_quality:
+                ser.write(b"0")
+                # print("불량")
+                time.sleep(3)  # 3초 대기
+                ser.write(b"1")
+                # print("재가동")
+            else:
+                ser.write(b"1")
+                # print("정상")
+
+        else:
+            ser.write(b"0")
+            print("Response sent to serial: 0")
+
+        time.sleep(0.05)
 
 
 if __name__ == "__main__":
     # Test both endpoints
-    print("Testing server start...")
+    # print("Testing server start...")
     # test_start_server()
 
     # time.sleep(1)
-    print("\nTesting image detection...")
+    # print("\nTesting image detection...")
 
-    img = "/Users/jeonsangmin/Desktop/test_img_/test_img_80.jpg"
-    # data = test_image_detection()
-    data = use_cloud_server(img)
-    Inference_Pico.show_image(img, data)
-    centers, objects_data, is_flag = confusion_matrix.process_images(data, "test_img_80.jpg")
-    print(centers, objects_data, is_flag)
+    # Pico 검출
+    _ = check_pico()
+
+    # False일 때 컨베이어 멈추기
+
+
+
+
+
+
