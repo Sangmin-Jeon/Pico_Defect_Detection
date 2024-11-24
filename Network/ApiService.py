@@ -12,20 +12,31 @@ class ApiService:
 
     """새로운 API 사용시 추가"""
 
-    # 192.169.10.13 서버 open
+    # 192.169.10.14 서버 open
     def post_start_server(self, team, model_id):
-        params = {
-            "model_id": model_id
-        }
-        return self.networkManager.post("start-server/" + team, params=params, is_team=False)
+        params = {"model_id": model_id}
+        try:
+            return self.networkManager.post(f"start-server/{team}", params=params, is_team=False)
+        except Exception as e:
+            print(f"Error in post_start_server: {e}")
+            raise
 
     def post_inference(self, min_confidence, base_model, file_path):
+        if not file_path:
+            raise ValueError("File path is required for inference.")
+
         params = {
             "min_confidence": min_confidence,
             "base_model": base_model
         }
-        import requests
-        # Open the image file and send it
-        with open(file_path, 'rb') as image_file:
-            files = {'file': ('b4_img_266.jpg', image_file, 'image/jpeg')}
-            return self.networkManager.post("inference/run", params=params, files=files, is_team=True)
+
+        try:
+            with open(file_path, 'rb') as image_file:
+                files = {'file': ('image.jpg', image_file, 'image/jpeg')}
+                return self.networkManager.post("inference/run", params=params, files=files, is_team=True)
+        except FileNotFoundError:
+            print(f"File not found: {file_path}")
+            raise
+        except Exception as e:
+            print(f"Error in post_inference: {e}")
+            raise

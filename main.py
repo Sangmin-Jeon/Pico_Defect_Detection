@@ -1,4 +1,5 @@
 from Network.ApiService import ApiService
+from requests.auth import HTTPBasicAuth
 # from Tools.DataAugment import set_data_augment
 # from Tools.Gradio import start_gradio
 # from Tools.CheckImage import show_imaged
@@ -7,13 +8,14 @@ import Inference_Pico
 import requests
 import os
 import time
+import confusion_matrix
 
 # 여기에 모델 API URL 을 넣으면 됩니다.
-VISION_API_URL = "https://suite-endpoint-api-apne2.superb-ai.com/endpoints/9a987f3f-174c-4678-acb2-60be9ea6a0ee/inference"
-TEAM = "kdt2024_1-9" # 이건 건들 필요 없어요.
-ACCESS_KEY = "fFJOF6bXM75WTU3qTKADi2DfJRVpcJXk5vAdEep2" # 이건 본인 setting -> ACCESS KEY를 직접 넣어서 사용하세요.
-directory_path = "/Users/jeonsangmin/Desktop/broken_img_"
-store_directory_path = "/Users/jeonsangmin/Desktop/v2/증강데이터"
+# VISION_API_URL = "https://suite-endpoint-api-apne2.superb-ai.com/endpoints/9a987f3f-174c-4678-acb2-60be9ea6a0ee/inference"
+# TEAM = "kdt2024_1-9" # 이건 건들 필요 없어요.
+# ACCESS_KEY = "fFJOF6bXM75WTU3qTKADi2DfJRVpcJXk5vAdEep2" # 이건 본인 setting -> ACCESS KEY를 직접 넣어서 사용하세요.
+# directory_path = "/Users/jeonsangmin/Desktop/broken_img_"
+# store_directory_path = "/Users/jeonsangmin/Desktop/v2/증강데이터"
 
 '''
     여기에 필요한 기능을 주석 해제 하여 사용하세요 !!!
@@ -71,6 +73,24 @@ def test_image_detection():
         print(f"Error: {response.status_code}")
         print(response.text)
 
+def use_cloud_server(img):
+    URL = "https://suite-endpoint-api-apne2.superb-ai.com/endpoints/be320cd2-d2bd-4e17-bc9a-4398e26d1f23/inference"
+    ACCESS_KEY = "fFJOF6bXM75WTU3qTKADi2DfJRVpcJXk5vAdEep2"
+
+    with open(img, "rb") as image_file:
+        image_data = image_file.read()
+
+    try:
+        response = requests.post(
+            url=URL,
+            auth=HTTPBasicAuth("kdt2024_1-9", ACCESS_KEY),
+            headers={"Content-Type": "image/jpeg"},
+            data=image_data,
+        )
+        return response.json()
+    except requests.RequestException as e:
+        print(f"Error uploading {img}: {e}")
+
 
 def test_start_server():
     # API endpoint URL
@@ -98,7 +118,11 @@ if __name__ == "__main__":
     # test_start_server()
 
     # time.sleep(1)
-
     print("\nTesting image detection...")
-    data = test_image_detection()
-    Inference_Pico.show_imaged("/home/rokey/Downloads/b4_img_266.jpg", data)
+
+    img = "/Users/jeonsangmin/Desktop/test_img_/test_img_80.jpg"
+    # data = test_image_detection()
+    data = use_cloud_server(img)
+    Inference_Pico.show_image(img, data)
+    centers, objects_data, is_flag = confusion_matrix.process_images(data, "test_img_80.jpg")
+    print(centers, objects_data, is_flag)

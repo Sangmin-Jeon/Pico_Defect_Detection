@@ -20,7 +20,7 @@ class NetworkManager:
         if not hasattr(self, "_initialized"):  # 인스턴스가 이미 초기화되었는지 확인
             self._initialized = True
             # self.base_url = "https://requests-homework.onrender.com"
-            self.base_url = "http://192.168.10.13:8888"
+            self.base_url = "http://192.168.10.14:8888"
             self.headers = {
                 "accept": "application/json",
                 "Content-Type": "application/json"
@@ -37,32 +37,30 @@ class NetworkManager:
 
     """새로운 HTTP 메서드 사용시 추가"""
 
-    def __request(self, method, endpoint, is_team, params, files=None, **kwargs):
-        # HTTP 요청 보내기
-        print(f"{endpoint}, is: {is_team}, {params}, file: {files}")
+    def __request(self, method, endpoint, is_team, params=None, files=None, json=None):
+        # Base URL 설정
+        if is_team:
+            url = f"http://192.168.10.14:8884/{endpoint}"
+        else:
+            url = f"{self.base_url}/{endpoint}"
+
+        # 로깅 추가
+        logger.info(f"Sending {method} request to {url} with params={params}, json={json}, files={files}")
+
         try:
-            if is_team:
-                url = f"http://192.168.10.13:8884/{endpoint}"
-                logger.info(f"Sending {method} request to {url} with params {kwargs}")
-                response = requests.request(
-                    method=method,
-                    url=url,
-                    params=params,
-                    files=files)
+            # 요청 전송
+            response = requests.request(
+                method=method,
+                url=url,
+                params=params,
+                json=json,
+                files=files,
+                headers=self.headers,
+            )
 
-            else:
-                url = f"{self.base_url}/{endpoint}"
-                logger.info(f"Sending {method} request to {url} with params {kwargs}")
-                response = requests.request(
-                    method=method,
-                    url=url,
-                    headers=self.headers
-                    , **kwargs)
-
-            # response = requests.request(method, url, headers=self.headers, **kwargs)
-
-            # 상태 코드 확인
+            # 응답 상태 확인
             response.raise_for_status()
+            logger.info(f"Response status code: {response.status_code}")
 
             if 200 <= response.status_code < 300:
                 logger.info(f"Received response: {response.status_code} {response.text}")
