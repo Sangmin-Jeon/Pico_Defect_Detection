@@ -8,16 +8,16 @@ import check_objects
 import lenght
 from io import BytesIO
 
+
 def crop_img(img, size_dict):
-    """ Crop the image based on the provided bounding box. """
     x = size_dict["x"]
     y = size_dict["y"]
     w = size_dict["width"]
     h = size_dict["height"]
-    return img[y:y+h, x:x+w]
+    return img[y:y + h, x:x + w]
+
 
 def use_cloud_server(img_path):
-    """ Send image to the cloud server for inference. """
     URL = "https://suite-endpoint-api-apne2.superb-ai.com/endpoints/9a987f3f-174c-4678-acb2-60be9ea6a0ee/inference"
     ACCESS_KEY = "fFJOF6bXM75WTU3qTKADi2DfJRVpcJXk5vAdEep2"
 
@@ -37,38 +37,8 @@ def use_cloud_server(img_path):
         print(f"Error uploading {img_path}: {e}")
         return None
 
-def predict_pos(objects_data):
-    """ Dummy predict function that returns the same bounding boxes as predictions. """
-    predicted_data = []
-    for obj in objects_data:
-        predicted_data.append({
-            "class": obj["class"],
-            "box": obj["box"]  # Here, prediction is identical to the ground truth data.
-        })
-    return predicted_data
-
-def check_objects_in_range(predicted_data, objects_data):
-    """ Check if predicted bounding boxes are within the expected ranges. """
-    results = []
-    for pred, actual in zip(predicted_data, objects_data):
-        pred_box = pred["box"]
-        actual_box = actual["box"]
-
-        pred_x1, pred_y1, pred_x2, pred_y2 = pred_box
-        actual_x1, actual_y1, actual_x2, actual_y2 = actual_box
-
-        is_within_range = (
-            actual_x1 >= pred_x1 and actual_y1 >= pred_y1 and
-            actual_x2 <= pred_x2 and actual_y2 <= pred_y2
-        )
-        results.append({
-            "class": pred["class"],
-            "is_within_range": is_within_range
-        })
-    return results
 
 def get_img():
-    """ Capture an image from the connected camera. """
     cam = cv2.VideoCapture(2)
     if not cam.isOpened():
         print("Camera Error")
@@ -83,103 +53,166 @@ def get_img():
 
     return img
 
+
 def get_init_data():
-    paths = [
-        "/Users/jeonsangmin/Desktop/Doosan Rokey 자료/Python_Study/Pico_Defect_Detection/resource/20241108_173716.jpg",
-        # path3
-        "/Users/jeonsangmin/Desktop/Doosan Rokey 자료/Python_Study/Pico_Defect_Detection/resource/20241108_093331.jpg",
-        # path4
-        "/Users/jeonsangmin/Desktop/Doosan Rokey 자료/Python_Study/Pico_Defect_Detection/resource/20241108_093725.jpg",
-        # path5
-        "/Users/jeonsangmin/Desktop/Doosan Rokey 자료/Python_Study/Pico_Defect_Detection/resource/20241108_132649.jpg",
-        # path6
-        "/Users/jeonsangmin/Desktop/Doosan Rokey 자료/Python_Study/Pico_Defect_Detection/resource/20241108_093323.jpg",
-        # path7
-        "/Users/jeonsangmin/Desktop/Doosan Rokey 자료/Python_Study/Pico_Defect_Detection/resource/20241108_173747.jpg",
-        # path8
-        "/Users/jeonsangmin/Desktop/Doosan Rokey 자료/Python_Study/Pico_Defect_Detection/resource/20241108_174343.jpg"
-        # path9
+    return [
+        [
+            {"class": "RASPBERRY PICO", "box": [120, 159, 251, 429]},
+            {"class": "USB", "box": [147, 394, 191, 434]},
+        ],
+        [
+            {"class": "RASPBERRY PICO", "box": [143, 124, 405, 369]},
+            {"class": "USB", "box": [155, 295, 210, 350]},
+        ],
+        [
+            {"class": "RASPBERRY PICO", "box": [111, 256, 386, 389]},
+            {"class": "USB", "box": [111, 289, 154, 332]},
+        ],
+        [
+            {"class": "RASPBERRY PICO", "box": [122, 168, 381, 417]},
+            {"class": "USB", "box": [133, 187, 190, 241]},
+        ],
+        [
+            {"class": "RASPBERRY PICO", "box": [295, 99, 419, 368]},
+            {"class": "USB", "box": [342, 97, 387, 137]},
+        ],
+        [
+            {"class": "RASPBERRY PICO", "box": [107, 256, 381, 396]},
+            {"class": "USB", "box": [343, 319, 383, 366]},
+        ],
+        [
+            {"class": "RASPBERRY PICO", "box": [192, 104, 406, 379]},
+            {"class": "USB", "box": [327, 322, 381, 371]},
+        ],
     ]
 
-    data = [
-        [
-            {"class": "RASPBERRY PICO", "box": [74, 269, 241, 147]},
-            {"class": "USB", "box": [78, 256, 104, 225]},
-        ],
-        [
-            {"class": "RASPBERRY PICO", "box": [13, 259, 175, 191]},
-            {"class": "USB", "box": [13, 240, 33, 216]},
-        ],
-        [
-            {"class": "RASPBERRY PICO", "box": [50, 263, 209, 115]},
-            {"class": "USB", "box": [60, 157, 90, 128]},
-        ],
-        [
-            {"class": "RASPBERRY PICO", "box": [113, 242, 182, 81]},
-            {"class": "USB", "box": [137, 104, 162, 81]},
-        ],
-        [
-            {"class": "RASPBERRY PICO", "box": [54, 273, 220, 145]},
-            {"class": "USB", "box": [185, 192, 216, 163]},
-        ],
-        [
-            {"class": "RASPBERRY PICO", "box": [68, 271, 232, 187]},
-            {"class": "USB", "box": [209, 232, 231, 207]},
-        ],
-        [
-            {"class": "RASPBERRY PICO", "box": [102, 256, 193, 90]},
-            {"class": "USB", "box": [149, 256, 175, 233]},
+
+
+# 중심점이 박스 안에 있거나 걸치는지 확인.
+def is_point_in_or_touching_box(center_point, box):
+    x_center, y_center = center_point
+    x1, y1, x2, y2 = box
+
+    # 점이 박스 내부에 있는 경우
+    if x1 <= x_center <= x2 and y1 <= y_center <= y2:
+        return True
+
+    # 점이 박스를 걸치는 경우: 확장된 영역 확인 (반경 5 픽셀 예시)
+    buffer = 5
+    expanded_box = [x1 - buffer, y1 - buffer, x2 + buffer, y2 + buffer]
+    return (
+        expanded_box[0] <= x_center <= expanded_box[2]
+        and expanded_box[1] <= y_center <= expanded_box[3]
+    )
+
+# 중심점이 데이터의 박스와 매칭되는지 확인.
+def match_center_with_boxes(centers, data):
+    for center_class, center_value in centers.items():
+        # HOLE은 체크하지 않음
+        if center_class == "HOLE":
+            continue  # HOLE은 건너뛰기
+        else:
+            # 다른 객체들에 대해서 매칭 수행
+            matched = any(
+                is_point_in_or_touching_box(center_value, obj["box"])
+                for obj in data
+                if obj["class"] == center_class
+            )
+            if not matched:
+                return False
+    return True
+
+# 예측된 결과를 이미지에 시각적으로 표시.
+def visualize_ret(image, ret):
+    # 이미지 파일을 읽어오는 부분 (이미지가 경로로 전달되지 않으면, 이미지 경로를 여기에 추가)
+    img = cv2.imread(image)  # 이미지 파일을 읽어서 `img`에 저장
+
+    for item in ret:
+        box = item["box"]
+
+        # box는 [x1, y1, x2, y2] 형태로 되어 있으므로, (x1, y1), (x2, y2)로 처리
+        if len(box) == 4:
+            pt1 = (int(box[0]), int(box[1]))  # 왼쪽 위 꼭지점 (x1, y1)
+            pt2 = (int(box[2]), int(box[3]))  # 오른쪽 아래 꼭지점 (x2, y2)
+
+            # 사각형 그리기
+            cv2.rectangle(img, pt1, pt2, (0, 255, 0), 2)
+        else:
+            print(f"Invalid box format: {box}")
+
+    # 결과 이미지 출력 (예시)
+    cv2.imshow("Result", img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+
+# 예측된 좌표를 이미지의 USB 좌표에 맞게 이동시킴.
+def adjust_coordinates_for_usb(ret, img_usb_center):
+    # 예측된 USB 좌표 찾기
+    predicted_usb = None
+    for item in ret:
+        if item["class"] == "USB":
+            predicted_usb = item["box"]
+            break
+
+    if predicted_usb is None:
+        print("No USB detected in the prediction.")
+        return ret
+
+    # 예측된 USB의 중심 계산
+    predicted_x1, predicted_y1, predicted_x2, predicted_y2 = predicted_usb
+    predicted_center_x = (predicted_x1 + predicted_x2) / 2
+    predicted_center_y = (predicted_y1 + predicted_y2) / 2
+
+    # 이미지의 USB 중심 좌표와 예측된 중심 좌표 차이 계산
+    center_dx = img_usb_center[0] - predicted_center_x
+    center_dy = img_usb_center[1] - predicted_center_y
+
+    # ret에서 모든 좌표를 이동시킴
+    for item in ret:
+        item_x1, item_y1, item_x2, item_y2 = item["box"]
+        # 모든 박스를 이동시키기
+        item["box"] = [
+            item_x1 + center_dx,
+            item_y1 + center_dy,
+            item_x2 + center_dx,
+            item_y2 + center_dy,
         ]
-    ]
 
-    return paths, data
+    return ret
 
 def check_pico():
-    """ Main function to check and process image and inference data. """
-    img = "/Users/jeonsangmin/Desktop/test_img_/test_img_7.jpg"
+    img = "/Users/jeonsangmin/Desktop/test_img_/test_img_94.jpg"
     data = use_cloud_server(img)
 
     if data is None:
         print("Error in getting data from the server.")
         return
 
-    # TODO: 컨베이터 코드 + 카메라 이미지 받는 코드 합치지
-    # 라즈베리 파이 코드 참고
-
-    Inference_Pico.show_image(data, img_path=img)
-
-    # Simulate confusion matrix processing and distance validation
-    centers, objects_data, is_flag = confusion_matrix.process_images(data, "test_img_80.jpg")
+    centers, objects_data, is_flag = confusion_matrix.process_images(data, "test_img_14.jpg")
     print(centers)
     print(objects_data)
 
-    answer = False
-
     if is_flag:
         _, _, is_flag = lenght.validate_distances(centers)
-        path, data = get_init_data()
+        data = get_init_data()
 
-        for path, objects_data in zip(path, data):
-            print(f"Processing {path}")
+        for i in range(len(data)):
+            input_data = data[i]
+            ret = check_objects.predict_pos(input_data)
+            print(ret)
 
-            # Predict positions
-            predicted_data = predict_pos(objects_data)
+            usb_value = centers['USB']
+            # 중심 좌표를 사용하여 보정
+            _ret = adjust_coordinates_for_usb(ret, usb_value)
 
-            # Check if predicted positions are within the expected range
-            results = check_objects_in_range(predicted_data, objects_data)
+            if match_center_with_boxes(centers, _ret):
+                visualize_ret(img, _ret)
+                print(f"양품 입니다: {img}")
+                break
+            else:
+                print(f"불량 입니다: {img}")
 
-            # Output results
-            for result in results:
-                print(f"Class: {result['class']}, Is within range: {result['is_within_range']}")
-            print("-" * 50)
-            answer = True
-
-        if not answer:
-            return
-
-    if not answer:
-        print("여기 불량으로 보내는 코드 작성")
-        pass
 
 if __name__ == "__main__":
     check_pico()
